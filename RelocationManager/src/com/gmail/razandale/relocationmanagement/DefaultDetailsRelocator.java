@@ -5,20 +5,20 @@
  */
 package com.gmail.razandale.relocationmanagement;
 
+
 import com.gmail.razandale.jpa.JPAExecutor;
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.EntityManagerFactory;
 
 
 public class DefaultDetailsRelocator implements DetailsRelocator {
 
     private final List<DetailsRelocatorListener> listeners;
 
-    private final EntityManagerFactory emf;
+    private final JPAExecutor jpaExecutor;
 
-    public DefaultDetailsRelocator(EntityManagerFactory emf) {
-        this.emf = emf;
+    public DefaultDetailsRelocator(JPAExecutor jpaExecutor) {
+        this.jpaExecutor = jpaExecutor;
         listeners = new ArrayList<>();
     }
 
@@ -29,16 +29,15 @@ public class DefaultDetailsRelocator implements DetailsRelocator {
 
     @Override
     public synchronized List<Detail> getDetailsOnDevice(Long deviceId) {
-        return JPAExecutor.executeQuery((em) -> {
+        return jpaExecutor.executeQuery((em) -> {
             return em.createNamedQuery("getDetailsOnDevice").getResultList();
-        },
-                emf);
+        });
     }
 
     @Override
     public synchronized Detail moveDetail(Detail detail, Long sourceDevice_Id, Long targetDevice_Id) {
         detail.setDeviceId(targetDevice_Id);
-        return JPAExecutor.merge(detail, emf);
+        return jpaExecutor.merge(detail);
     }
 
     private synchronized void notifyAllListeners(
